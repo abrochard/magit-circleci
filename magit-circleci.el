@@ -39,7 +39,7 @@
 
 ;;; Usage:
 
-;; M-x magit-circleci : to activate
+;; M-x magit-circleci-mode : to activate
 ;; C-c C-o OR RET : to visit the build at point
 ;; " : in magit status to open the CircleCI Menu
 ;; " f : to pull latest builds for the current repo
