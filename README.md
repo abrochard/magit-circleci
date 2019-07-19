@@ -20,6 +20,7 @@ C-c C-o OR RET : to visit the build at point
 ```
 
 ## Customization
+  * If you use CircleCI enterprise, you can change your host by editing `magit-circleci-host`.
   * By default, the extension fetches and shows the last 5 builds, you can change that by customizing the `magit-circleci-n-builds' variable.
 
 ## TODO
