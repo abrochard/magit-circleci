@@ -62,7 +62,7 @@
   :group 'tools
   :link '(url-link :tag "Repository" "https://github.com/abrochard/magit-circleci"))
 
-(defcustom magit-circleci-host "https://circleci.com/api/v1.1"
+(defcustom magit-circleci-host "https://circleci.com"
   "CircleCI API host."
   :group 'magit-circleci)
 
