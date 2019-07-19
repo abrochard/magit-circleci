@@ -2,6 +2,8 @@
 
 Magit extension for CircleCI. See the latest builds from the Magit status buffer.
 
+![alt text](magit-circleci.png)
+
 ## Setup
 Get your token (https://circleci.com/docs/api/#add-an-api-token) and shove it as `(setq magit-circleci-token "XXXXXXXX")` or set it as environment variable `CIRCLECI_TOKEN`.
 
