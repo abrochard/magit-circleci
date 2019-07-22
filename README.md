@@ -1,3 +1,5 @@
+[![MELPA](https://melpa.org/packages/magit-circleci-badge.svg)](https://melpa.org/#/magit-circleci)
+
 # magit-circleci
 
 Magit extension for CircleCI. See the latest builds from the Magit status buffer.
