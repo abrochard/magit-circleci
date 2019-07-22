@@ -24,7 +24,7 @@
 ;; Keywords: circleci continuous integration magit vc tools
 ;; URL: https://github.com/abrochard/magit-circleci
 ;; License: GNU General Public License >= 3
-;; Package-Requires: ((dash "2.15.0") (transient "0.1.0") (magit "2.90.0") (emacs "25.3"))
+;; Package-Requires: ((transient "0.1.0") (magit "2.90.0") (emacs "25.3"))
 
 ;;; Commentary:
 
@@ -52,7 +52,6 @@
 
 ;;; Code:
 
-(require 'dash)
 (require 'json)
 (require 'url-http)
 (require 'magit)
@@ -117,7 +116,7 @@ PROJECT is the project name."
 (defun magit-circleci--current-project ()
   "Get the current CircleCI project."
   (let ((reponame (magit-circleci--reponame)))
-    (car (-filter (lambda (x) (equal reponame (cdr (assoc 'reponame x))))
+    (car (seq-filter (lambda (x) (equal reponame (cdr (assoc 'reponame x))))
                   (magit-circleci--projects)))))
 
 ;; (defun magit-circleci--last-builds ()
@@ -142,7 +141,7 @@ PROJECT is the project name."
 
 REPO is the repo name.
 BUILD-NUM is the build number."
-  (car (-filter (lambda (x) (equal build-num (cdr (assoc 'build_num x))))
+  (car (seq-filter (lambda (x) (equal build-num (cdr (assoc 'build_num x))))
                 (cdr (assoc repo magit-circleci--cache)))))
 
 (defun magit-circleci-pull ()
