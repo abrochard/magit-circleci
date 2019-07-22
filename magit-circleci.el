@@ -53,8 +53,12 @@
 ;;; Code:
 
 (require 'dash)
+(require 'json)
+(require 'url-http)
 (require 'magit)
 (require 'transient)
+
+(defvar url-http-end-of-headers)  ; silence byte-compiler warnings
 
 (defgroup magit-circleci nil
   "CircleCI integration for Magit."
@@ -64,7 +68,8 @@
 
 (defcustom magit-circleci-host "https://circleci.com"
   "CircleCI API host."
-  :group 'magit-circleci)
+  :group 'magit-circleci
+  :type 'string)
 
 (defvar magit-circleci-token
   (getenv "CIRCLECI_TOKEN"))
@@ -84,7 +89,7 @@ ENDPOINT is the endpoint.
 ARGS is the url arguments."
   (let ((url (concat magit-circleci-host "/api/v1.1" endpoint
                      "?circle-token=" magit-circleci-token
-                     "&" (mapconcat 'identity args "&")))
+                     "&" (mapconcat #'identity args "&")))
         (url-request-method method)
         (url-request-extra-headers '(("Accept" . "application/json"))))
     (with-current-buffer (url-retrieve-synchronously url)
@@ -169,7 +174,6 @@ BUILD-NUM is the build number."
 BUILD is the build object."
   (let ((status (cdr (assoc 'status build)))
         (subject (cdr (assoc 'subject build)))
-        (url (cdr (assoc 'build_url build)))
         (num (cdr (assoc 'build_num build))))
     (magit-section-hide
      (magit-insert-section (circleci)
@@ -195,8 +199,8 @@ BUILD is the build object."
 
 (defvar magit-circleci-section-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-browse-thing] 'magit-circleci-browse-build)
-    (define-key map [remap magit-visit-thing] 'magit-circleci-browse-build)
+    (define-key map [remap magit-browse-thing] #'magit-circleci-browse-build)
+    (define-key map [remap magit-visit-thing] #'magit-circleci-browse-build)
     map))
 
 (defun magit-circleci--activate ()
@@ -206,7 +210,7 @@ BUILD is the build object."
   (transient-append-suffix 'magit-dispatch "%"
     '("\"" "CircleCI" circleci-transient ?%))
   (with-eval-after-load 'magit-mode
-    (define-key magit-mode-map "\"" 'circleci-transient)))
+    (define-key magit-mode-map "\"" #'circleci-transient)))
 
 (defun magit-circleci--deactivate ()
   "Remove the circleci section and the transient."
