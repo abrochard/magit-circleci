@@ -24,7 +24,7 @@
 ;; Keywords: circleci continuous integration magit vc tools
 ;; URL: https://github.com/abrochard/magit-circleci
 ;; License: GNU General Public License >= 3
-;; Package-Requires: ((transient "0.1.0") (magit "2.90.0") (emacs "25.3"))
+;; Package-Requires: ((dash "2.16.0") (transient "0.1.0") (magit "2.90.0") (emacs "25.3"))
 
 ;;; Commentary:
 
@@ -56,6 +56,7 @@
 (require 'url-http)
 (require 'magit)
 (require 'transient)
+(require 'dash)
 
 (defvar url-http-end-of-headers)  ; silence byte-compiler warnings
 
@@ -107,7 +108,10 @@ VCS-TYPE is the csv type.
 USERNAME is the username.
 PROJECT is the project name."
   (mapcar (lambda (x) (list (assoc 'status x) (assoc 'subject x)
-                            (assoc 'build_url x) (assoc 'build_num x)))
+                            (assoc 'build_url x) (assoc 'build_num x)
+                            (assoc 'workflow_id (assoc 'workflows x))
+                            (assoc 'job_name (assoc 'workflows x))
+                            (assoc 'workflow_name (assoc 'workflows x))))
           (magit-circleci--request
            "GET"
            (format "/project/%s/%s/%s" vcs-type username project)
@@ -155,7 +159,8 @@ BUILD-NUM is the build number."
               (username (cdr (assoc 'username project))))
           (delete (assoc reponame magit-circleci--cache) magit-circleci--cache)
           (push (cons reponame (magit-circleci--recent-builds vcs-type username reponame))
-                magit-circleci--cache))))))
+                magit-circleci--cache)
+          (message "Done"))))))
 
 (defun magit-circleci-browse-build ()
   "Browse build under cursor."
@@ -179,7 +184,18 @@ BUILD is the build object."
        (magit-insert-heading
          (concat (propertize (format "%s" num) 'face
                              (if (equal status "success") 'success 'error))
-                 (format " %s\n" subject)))))))
+                 (format " %s\n" (cdr (assoc 'job_name build)))))))))
+
+(defun magit-circleci--insert-workflow (builds)
+  (let ((name (cdr (assoc 'workflow_name (nth 1 builds))))
+        (subject (cdr (assoc 'subject (nth 1 builds)))))
+    (magit-insert-section (workflow)
+      (magit-insert-heading (propertize (format "%s / %s" name subject) 'face 'magit-section-secondary-heading))
+      (dolist (elt (cdr builds))
+        (magit-circleci--insert-build elt)))))
+
+(defun magit-circleci--group-workflows (builds)
+  (-group-by (lambda (x) (cdr (assoc 'workflow_id x))) builds))
 
 (defun magit-circleci--section ()
   "Insert CircleCI section in magit status."
@@ -187,8 +203,8 @@ BUILD is the build object."
     (when builds
       (magit-insert-section (root)
         (magit-insert-heading (propertize "CircleCi" 'face 'magit-section-heading))
-        (dolist (elt (cdr builds))
-          (magit-circleci--insert-build elt))
+        (dolist (elt (magit-circleci--group-workflows (cdr builds)))
+          (magit-circleci--insert-workflow elt))
         (insert "\n")))))
 
 (define-transient-command circleci-transient ()
