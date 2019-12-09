@@ -270,7 +270,7 @@ BUILDS are the circleci builds."
 (defun magit-circleci--deactivate ()
   "Remove the circleci section and the transient."
   (remove-hook 'magit-status-sections-hook #'magit-circleci--section)
-  (transient-remove-suffix 'magit-dispatch "%"))
+  (transient-remove-suffix 'magit-dispatch "\""))
 
 ;;;###autoload
 (define-minor-mode magit-circleci-mode
