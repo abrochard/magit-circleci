@@ -121,7 +121,7 @@ PROJECT is the project name."
   "Get the current CircleCI project."
   (let ((reponame (magit-circleci--reponame)))
     (car (seq-filter (lambda (x) (equal reponame (cdr (assoc 'reponame x))))
-                  (magit-circleci--projects)))))
+                     (magit-circleci--projects)))))
 
 ;; (defun magit-circleci--last-builds ()
 ;;   "Fetch last builds for current project."
@@ -146,7 +146,38 @@ PROJECT is the project name."
 REPO is the repo name.
 BUILD-NUM is the build number."
   (car (seq-filter (lambda (x) (equal build-num (cdr (assoc 'build_num x))))
-                (cdr (assoc repo magit-circleci--cache)))))
+                   (cdr (assoc repo magit-circleci--cache)))))
+
+(defun magit-circleci--cache-file-location ()
+  "Get the filename of the cache file for current repo."
+  (format "%s.git/circleci" (magit-toplevel)))
+
+(defun magit-circleci--cache-file-exists ()
+  "Return t if the cache file exists."
+  (file-exists-p (magit-circleci--cache-file-location)))
+
+(defun magit-circleci--write-cache-file (data)
+  "Write the cache data to a `circleci` file in the .git folder.
+
+DATA is the circleci data."
+  (with-temp-buffer
+    (prin1 data (current-buffer))
+    (write-file (magit-circleci--cache-file-location))))
+
+(defun magit-circleci--read-cache-file ()
+  "Read the data that was cached into the `circleci` file in the .git folder."
+  (car (read-from-string (with-temp-buffer
+                           (insert-file-contents (magit-circleci--cache-file-location))
+                           (buffer-string)))))
+
+(defun magit-circleci--update-cache (reponame data)
+  "Update the memory cache with data for reponame.
+
+REPONAME is the name of the repo.
+DATA is the circleci data."
+  (delete (assoc reponame magit-circleci--cache) magit-circleci--cache)
+  (push (cons reponame data) magit-circleci--cache)
+  (magit-circleci--write-cache-file data))
 
 (defun magit-circleci-pull ()
   "Pull last builds of current repo and put them in cache."
@@ -157,10 +188,9 @@ BUILD-NUM is the build number."
         (let ((reponame (cdr (assoc 'reponame project)))
               (vcs-type (cdr (assoc 'vcs_type project)))
               (username (cdr (assoc 'username project))))
-          (delete (assoc reponame magit-circleci--cache) magit-circleci--cache)
-          (push (cons reponame (magit-circleci--recent-builds vcs-type username reponame))
-                magit-circleci--cache)
-          (message "Done"))))))
+          (magit-circleci--update-cache reponame (magit-circleci--recent-builds vcs-type username reponame))
+          (message "Done")
+          (magit))))))
 
 (defun magit-circleci-browse-build ()
   "Browse build under cursor."
@@ -187,6 +217,9 @@ BUILD is the build object."
                  (format " %s\n" (cdr (assoc 'job_name build)))))))))
 
 (defun magit-circleci--insert-workflow (builds)
+  "Insert the builds as workflows.
+
+BUILDS are the circleci builds."
   (let ((name (cdr (assoc 'workflow_name (nth 1 builds))))
         (subject (cdr (assoc 'subject (nth 1 builds)))))
     (magit-insert-section (workflow)
@@ -195,11 +228,18 @@ BUILD is the build object."
         (magit-circleci--insert-build elt)))))
 
 (defun magit-circleci--group-workflows (builds)
+  "Group the builds into workflows.
+
+BUILDS are the circleci builds."
   (-group-by (lambda (x) (cdr (assoc 'workflow_id x))) builds))
 
 (defun magit-circleci--section ()
   "Insert CircleCI section in magit status."
-  (let ((builds (assoc (magit-circleci--reponame) magit-circleci--cache)))
+  (let* ((memcache (assoc (magit-circleci--reponame) magit-circleci--cache))
+         (builds (cond (memcache memcache)
+                       ((magit-circleci--cache-file-exists)
+                        (cons (magit-circleci--reponame)
+                              (magit-circleci--read-cache-file))))))
     (when builds
       (magit-insert-section (root)
         (magit-insert-heading (propertize "CircleCi" 'face 'magit-section-heading))

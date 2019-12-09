@@ -28,9 +28,9 @@ C-c C-o OR RET : to visit the build at point
 ## TODO
   * retry a build
   * cancel build
-  * build cache persistence between sessions
   * show build output/failure
   * request timeout
   * HTTP error handling
   * utf-8 support
   * filter builds by branch/author
+  * change screenshot to show new workflows representation
