@@ -25,6 +25,9 @@ C-c C-o OR RET : to visit the build at point
   * If you use CircleCI enterprise, you can change your host by editing `magit-circleci-host`.
   * By default, the extension fetches and shows the last 5 builds, you can change that by customizing the `magit-circleci-n-builds' variable.
 
+## Notice
+  * Name of your local workspace folder should be same as name of the repo, for example, if repo is `orgName/repoName`, then the folder name should be `repoName`, otherwise, retrieve of build status will fail.
+
 ## TODO
   * retry a build
   * cancel build
