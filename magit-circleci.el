@@ -247,7 +247,7 @@ BUILDS are the circleci builds."
           (magit-circleci--insert-workflow elt))
         (insert "\n")))))
 
-(define-transient-command circleci-transient ()
+(transient-define-prefix circleci-transient ()
   "Dispatch a CircleCI Command"
   ["Fetch"
    ("f" "builds" magit-circleci-pull)])
